@@ -97,6 +97,27 @@ def generate_summary_report(production_data):
         summary += "\n"
     return summary
 
+def clear_empty_entries():
+    # Load production data
+    production_data = load_existing_data()
+
+    # Print the original production data
+    print("Original production data:", production_data)
+
+    # Filter out entries with all item quantities set to zero
+    filtered_data = [entry for entry in production_data["Data"] if any(item_data["quantity"] != 0 for item_data in entry["items"])]
+
+    print("Filtered production data:", filtered_data)
+
+    # Save the filtered production data back to the JSON file
+    with open("production_data.json", "w") as f:
+        json.dump({"Data": filtered_data}, f)
+
+    st.success("Empty entries cleared successfully!")
+
+
+
+
 def sort_data_by_date(production_data):
     sorted_data = sorted(production_data["Data"], key=lambda x: datetime.strptime(x["date"], "%Y-%m-%d"))
     production_data["Data"] = sorted_data
@@ -106,8 +127,8 @@ def main():
     st.title("Factory Production and Raw Material Calculator")
     item_materials = load_item_materials()
     # Menu bar
-    #menu_options = ["Home", "View Report", "Set Order JSON", "Edit Item Materials", "User Raw Materials"]
-    menu_options = ["Home", "View Report", "Set Order JSON", "User Raw Materials"]
+    #menu_options = ["Home", "View Report", "Clear Json", "Set Order JSON", "Edit Item Materials", "User Raw Materials"]
+    menu_options = ["Home", "View Report", "Clear Json", "Set Order JSON", "User Raw Materials"]
     choice = st.sidebar.selectbox("Menu", menu_options)
 
     if choice == "Home":
@@ -180,6 +201,12 @@ def main():
         st.header("View Report")
         summary_report = generate_summary_report(st.session_state.production_data)
         st.markdown(summary_report)
+
+    elif choice == "Clear Json":
+        st.header("Clear Json")
+        if st.button("Clear Empty Entries"):
+            clear_empty_entries()
+
 
     elif choice == "Set Order JSON":
         st.header("Set Order JSON")

@@ -169,8 +169,7 @@ def main():
             else:
                 st.session_state.quantity_values = {item: 0 for item in item_materials.keys()}  # Set default values to 0
                 for item in item_materials.keys():
-                    st.session_state.quantity_values[item] = st.number_input(f"Enter Quantity of {item} Built", min_value=0,
-                                                                             step=1,
+                    st.session_state.quantity_values[item] = st.number_input(f"Enter Quantity of {item} Built", min_value=0, step=1,
                                                                              value=st.session_state.quantity_values[item],
                                                                              key=f"quantity_{item}")
 

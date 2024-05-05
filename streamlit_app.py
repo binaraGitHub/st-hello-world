@@ -2,13 +2,83 @@ import streamlit as st
 import json
 from datetime import datetime
 
-# Define the raw material requirements for each item
-item_materials = {
-    "A": {"X": 1, "Y": 1},
-    "B": {"X": 1, "Z": 1},
-    "C": {"X": 1, "Z": 2}
-}
 
+
+def load_item_materials():
+    try:
+        with open("item_materials.json", "r") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {}
+
+def save_item_materials(item_materials):
+    with open("item_materials.json", "w") as f:
+        json.dump(item_materials, f, indent=4)
+
+def calculate_total_used_raw_materials(start_date, end_date, item_materials):
+    production_data = load_existing_data()
+    total_materials = {}
+    for entry in production_data["Data"]:
+        entry_date = datetime.strptime(entry["date"], "%Y-%m-%d").date()  # Convert to datetime.date
+        if start_date <= entry_date <= end_date:
+            for item_data in entry["items"]:
+                item = item_data["item type"]
+                quantity = item_data["quantity"]
+                for material, qty in item_materials[item].items():
+                    if material not in total_materials:
+                        total_materials[material] = 0
+                    total_materials[material] += qty * quantity
+    return total_materials
+
+
+
+
+
+
+def edit_item_materials():
+    st.title("Edit Item Materials")
+
+    # Load item materials
+    item_materials = load_item_materials()
+
+    # Display current item materials
+    st.header("Current Item Materials")
+    st.write(item_materials)
+
+    # Add new item
+    st.header("Add New Item")
+    new_item_name = st.text_input("Enter Item Name:")
+    if st.button("Add Item"):
+        item_materials[new_item_name] = {}
+        save_item_materials(item_materials)
+        st.success("Item added successfully!")
+
+        # Edit item materials
+    st.header("Edit Item Materials")
+    item_to_edit = st.selectbox("Select Item to Edit:", list(item_materials.keys()))
+
+    # Get all available raw materials
+    all_raw_materials = set()
+    for materials in item_materials.values():
+        all_raw_materials.update(materials.keys())
+
+    # Create a dynamic form to edit quantities for each raw material
+    edited_materials = {}
+    for material in all_raw_materials:
+        quantity = item_materials[item_to_edit].get(material, 0)
+        edited_materials[material] = st.number_input(f"Edit Quantity of {material}:", value=quantity)
+    if st.button("Save Changes"):
+        item_materials[item_to_edit] = edited_materials
+        save_item_materials(item_materials)
+        st.success("Changes saved successfully!")
+
+    # Delete item
+    st.header("Delete Item")
+    item_to_delete = st.selectbox("Select Item to Delete:", list(item_materials.keys()))
+    if st.button("Delete Item"):
+        del item_materials[item_to_delete]
+        save_item_materials(item_materials)
+        st.success("Item deleted successfully!")
 def load_existing_data():
     try:
         with open("production_data.json", "r") as f:
@@ -34,9 +104,10 @@ def sort_data_by_date(production_data):
 
 def main():
     st.title("Factory Production and Raw Material Calculator")
-
+    item_materials = load_item_materials()
     # Menu bar
-    menu_options = ["Home", "View Report", "Set Order JSON"]
+    #menu_options = ["Home", "View Report", "Set Order JSON", "Edit Item Materials", "User Raw Materials"]
+    menu_options = ["Home", "View Report", "Set Order JSON", "User Raw Materials"]
     choice = st.sidebar.selectbox("Menu", menu_options)
 
     if choice == "Home":
@@ -116,6 +187,22 @@ def main():
         with open("production_data.json", "w") as f:
             json.dump(sorted_data, f)
         st.success("Order of data in JSON file set according to the date.")
+
+    elif choice == "Edit Item Materials":
+        edit_item_materials()
+
+
+
+    elif choice == "User Raw Materials":
+        st.header("User Raw Materials")
+        start_date = st.date_input("Start Date")
+        end_date = st.date_input("End Date")
+        if st.button("Calculate"):
+            total_materials = calculate_total_used_raw_materials(start_date, end_date, item_materials)
+            st.write("Total Used Raw Materials Quantity:")
+            for material, quantity in total_materials.items():
+                st.write(f"{material}: {quantity}")
+
 
 if __name__ == "__main__":
     main()

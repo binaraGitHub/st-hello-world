@@ -124,11 +124,11 @@ def sort_data_by_date(production_data):
     return production_data
 
 def main():
-    st.title("Factory Production and Raw Material Calculator")
+    st.title("Raw Material Calculator")
     item_materials = load_item_materials()
     # Menu bar
-    #menu_options = ["Home", "View Report", "Clear Json", "Set Order JSON", "Edit Item Materials", "User Raw Materials"]
-    menu_options = ["Home", "View Report", "Clear Json", "Set Order JSON", "User Raw Materials"]
+    #menu_options = ["Home", "Daily Surgery Details", "Clear Json", "Set Order JSON", "Edit Item Materials", "Used Raw Materials"]
+    menu_options = ["Home", "Daily Surgery Details", "Clear Json", "Set Order JSON", "Used Raw Materials"]
     choice = st.sidebar.selectbox("Menu", menu_options)
 
     if choice == "Home":
@@ -143,7 +143,7 @@ def main():
             st.session_state.quantity_values = {item: 0 for item in item_materials.keys()}
 
         # Input production data
-        st.header("Enter Daily Production")
+        st.header("Enter Daily Surgery Details")
         date = st.date_input("Select Date", datetime.today())
 
         # Simulate button click event to use existing data
@@ -163,18 +163,19 @@ def main():
                 for item_data in existing_data["items"]:
                     item = item_data["item type"]
                     quantity = item_data["quantity"]
-                    st.session_state.quantity_values[item] = st.number_input(f"Enter Quantity of {item} Built", min_value=0, step=1,
+                    st.session_state.quantity_values[item] = st.number_input(f"Enter Number of {item} completed", min_value=0, step=1,
                                                                              value=quantity,
                                                                              key=f"quantity_{item}")
             else:
                 st.session_state.quantity_values = {item: 0 for item in item_materials.keys()}  # Set default values to 0
                 for item in item_materials.keys():
-                    st.session_state.quantity_values[item] = st.number_input(f"Enter Quantity of {item} Built", min_value=0, step=1,
+                    st.session_state.quantity_values[item] = st.number_input(f"Enter Number of {item} completed", min_value=0,
+                                                                             step=1,
                                                                              value=st.session_state.quantity_values[item],
                                                                              key=f"quantity_{item}")
 
         # Save data as JSON
-        if st.button("Save Production Data as JSON"):
+        if st.button("Save"):
             # Check if data for the selected date already exists
             date_str = str(date)
             existing_data_index = next((i for i, data in enumerate(st.session_state.production_data["Data"]) if data["date"] == date_str), None)
@@ -196,8 +197,8 @@ def main():
 
             st.success("Data saved successfully!")
 
-    elif choice == "View Report":
-        st.header("View Report")
+    elif choice == "Daily Surgery Details":
+        st.header("Daily Surgery Details")
         summary_report = generate_summary_report(st.session_state.production_data)
         st.markdown(summary_report)
 
@@ -219,8 +220,8 @@ def main():
 
 
 
-    elif choice == "User Raw Materials":
-        st.header("User Raw Materials")
+    elif choice == "Used Raw Materials":
+        st.header("Used Raw Materials")
         start_date = st.date_input("Start Date")
         end_date = st.date_input("End Date")
         if st.button("Calculate"):
